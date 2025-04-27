@@ -1,0 +1,52 @@
+{% extends 'clinic/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        {% comment %} не забывать добавить фото и в др (из пап media) {% endcomment %} 
+        <img src="{{ doctor.photo.url }}" alt="{{ doctor.user.get_full_name }}" class="img-fluid rounded">  
+    </div>
+    <div class="col-md-8">
+        <h1>{{ doctor.user.get_full_name }}</h1>
+        <h3>{{ doctor.specialty }}</h3>
+        <p><strong>Опыт работы:</strong> {{ doctor.experience }} лет</p>
+        <p><strong>Образование:</strong> {{ doctor.education }}</p>
+        <p><strong>О себе:</strong> {{ doctor.bio }}</p>
+        
+        {% if user.is_authenticated and user.patient %}
+            <a href="{% url 'appointment_create' %}?doctor={{ doctor.id }}" class="btn btn-primary">
+                Записаться на прием
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-5">
+    <h3>Отзывы</h3>
+    {% if reviews %}
+        {% for review in reviews %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ review.patient.user.get_full_name }}</h5>
+                    <div class="text-warning">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                        {% endfor %}
+                    </div>
+                    <p class="card-text">{{ review.comment }}</p>
+                    <small class="text-muted">{{ review.created_at|date:"d.m.Y" }}</small>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>Пока нет отзывов</p>
+    {% endif %}
+    
+    {% if user.is_authenticated and user.patient and not user_review %}
+        <a href="{% url 'create_review' doctor.id %}" class="btn btn-outline-primary">
+            Оставить отзыв
+        </a>
+    {% endif %}
+</div>
+{% endblock %}

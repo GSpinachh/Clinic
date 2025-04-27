@@ -1,0 +1,215 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+
+{% block title %}Запись на прием{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Запись на прием</h2>
+                </div>
+                <div class="card-body">
+                    {% if doctor %}
+                    <div class="alert alert-info">
+                        Вы записываетесь к: <strong>{{ doctor.user.get_full_name }}</strong>, {{ doctor.specialty }}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" id="appointmentForm">
+                        {% csrf_token %}
+                        
+                        {% if not doctor %}
+                        <div class="mb-3">
+                            <label for="id_specialty" class="form-label">Специальность</label>
+                            {{ form.specialty }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_doctor" class="form-label">Врач</label>
+                            {{ form.doctor }}
+                            <div id="doctorLoading" class="d-none mt-2">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Загрузка...</span>
+                                </div>
+                                <span class="ms-2">Загрузка списка врачей...</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <input type="hidden" name="doctor" value="{{ doctor.id }}">
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_date" class="form-label">Дата приема</label>
+                                {{ form.date }}
+                                <div class="invalid-feedback" id="dateFeedback"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_time" class="form-label">Время приема</label>
+                                {{ form.time }}
+                                <div class="invalid-feedback" id="timeFeedback"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_notes" class="form-label">Ваши комментарии (необязательно)</label>
+                            {{ form.notes }}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% if doctor %}{{ doctor.get_absolute_url }}{% else %}{% url 'doctor_list' %}{% endif %}" 
+                               class="btn btn-outline-secondary me-md-2">
+                                Отмена
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Записаться на прием
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            {% if doctor and doctor.available_slots %}
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h3 class="mb-0">Доступное время</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="timeSlots">
+                        {% for slot in doctor.available_slots %}
+                        <div class="col-6 col-md-4 col-lg-3 mb-2">
+                            <button type="button" class="btn btn-outline-primary w-100 time-slot-btn" 
+                                    data-date="{{ slot.date|date:'Y-m-d' }}" 
+                                    data-time="{{ slot.time|time:'H:i' }}">
+                                {{ slot.time|time:"H:i" }}
+                            </button>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <p class="text-muted">Нет доступных слотов для записи</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const specialtySelect = document.getElementById('id_specialty');
+    const doctorSelect = document.getElementById('id_doctor');
+    const doctorLoading = document.getElementById('doctorLoading');
+    
+    if (specialtySelect) {
+        specialtySelect.addEventListener('change', function() {
+            const specialtyId = this.value;
+            
+            if (specialtyId) {
+                doctorSelect.disabled = true;
+                doctorLoading.classList.remove('d-none');
+                
+                fetch(`{% url 'get_doctors' %}?specialty_id=${specialtyId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        doctorSelect.innerHTML = '';
+                        
+                        if (data.length > 0) {
+                            const defaultOption = document.createElement('option');
+                            defaultOption.value = '';
+                            defaultOption.textContent = 'Выберите врача';
+                            doctorSelect.appendChild(defaultOption);
+                            
+                            data.forEach(doctor => {
+                                const option = document.createElement('option');
+                                option.value = doctor.id;
+                                option.textContent = doctor.name;
+                                doctorSelect.appendChild(option);
+                            });
+                        } else {
+                            const option = document.createElement('option');
+                            option.textContent = 'Нет доступных врачей';
+                            doctorSelect.appendChild(option);
+                        }
+                    })
+                    .finally(() => {
+                        doctorSelect.disabled = false;
+                        doctorLoading.classList.add('d-none');
+                    });
+            } else {
+                doctorSelect.innerHTML = '<option value="">Сначала выберите специальность</option>';
+            }
+        });
+    }
+    
+    // Выбор вр
+    const timeSlots = document.querySelectorAll('.time-slot-btn');
+    const dateInput = document.getElementById('id_date');
+    const timeInput = document.getElementById('id_time');
+    
+    if (timeSlots.length > 0) {
+        timeSlots.forEach(button => {
+            button.addEventListener('click', function() {
+                timeSlots.forEach(btn => btn.classList.remove('active'));
+                
+                this.classList.add('active');
+                
+                dateInput.value = this.dataset.date;
+                timeInput.value = this.dataset.time;
+
+                dateInput.classList.remove('is-invalid');
+                timeInput.classList.remove('is-invalid');
+                document.getElementById('dateFeedback').textContent = '';
+                document.getElementById('timeFeedback').textContent = '';
+            });
+        });
+    }
+    
+    const form = document.getElementById('appointmentForm');
+    
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+            
+            // !Проверка даты
+            if (!dateInput.value) {
+                dateInput.classList.add('is-invalid');
+                document.getElementById('dateFeedback').textContent = 'Пожалуйста, выберите дату';
+                isValid = false;
+            } else {
+                dateInput.classList.remove('is-invalid');
+            }
+            
+            // !Проверка времени
+            if (!timeInput.value) {
+                timeInput.classList.add('is-invalid');
+                document.getElementById('timeFeedback').textContent = 'Пожалуйста, выберите время';
+                isValid = false;
+            } else {
+                timeInput.classList.remove('is-invalid');
+            }
+            
+            if (!isValid) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.time-slot-btn.active {
+    background-color: #0d6efd;
+    color: white;
+}
+.time-slot-btn:hover:not(.active) {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+
+{% block title %}Главная - Наша Клиника{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Добро пожаловать в Нашу Клинику</h1>
+            <p class="col-md-8 fs-4">Мы предлагаем качественные медицинские услуги с заботой о каждом пациенте.</p>
+            {% if not user.is_authenticated %}
+            <a class="btn btn-primary btn-lg" href="{% url 'register' %}" role="button">Зарегистрироваться</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!--  -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Наши специализации</h2>
+        </div>
+        {% for specialty in specialties %}
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ specialty.name }}</h5>
+                    <p class="card-text">{{ specialty.description|truncatewords:20 }}</p>
+                    <a href="{% url 'doctor_list' %}?specialty={{ specialty.id }}" class="btn btn-outline-primary">
+                        Посмотреть врачей
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!--  -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Наши врачи</h2>
+        </div>
+        {% for doctor in popular_doctors %}
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <img src="{{ doctor.photo.url }}" class="card-img-top" alt="{{ doctor.user.get_full_name }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ doctor.user.get_full_name }}</h5>
+                    <p class="card-text">{{ doctor.specialty }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ doctor.get_absolute_url }}" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                        <small class="text-muted">Опыт: {{ doctor.experience }} лет</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        <div class="col-12 text-center">
+            <a href="{% url 'doctor_list' %}" class="btn btn-primary">Все врачи</a>
+        </div>
+    </div>
+
+    <!-- Как записаться -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Как записаться на прием?</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3 text-primary fs-2">1</div>
+                                <div>
+                                    <h5>Выберите врача</h5>
+                                    <p>Ознакомьтесь со списком наших специалистов и выберите подходящего</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3 text-primary fs-2">2</div>
+                                <div>
+                                    <h5>Выберите дату и время</h5>
+                                    <p>Запишитесь на удобное для вас время приема</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3 text-primary fs-2">3</div>
+                                <div>
+                                    <h5>Подтвердите запись</h5>
+                                    <p>Получите подтверждение записи на указанную почту</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <div class="text-center">
+                        <a href="{% url 'appointment_create' %}" class="btn btn-primary">Записаться на прием</a>
+                    </div>
+                    {% else %}
+                    <div class="text-center">
+                        <p>Для записи на прием необходимо <a href="{% url 'login' %}">войти</a> или <a href="{% url 'register' %}">зарегистрироваться</a></p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Контакты -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Контакты</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Адрес:</strong> г. Ульяновкс, ул. Медицинская, д. 15</p> 
+                    <p><strong>Телефон:</strong> +7 (495) 123-45-67</p>
+                    <p><strong>Email:</strong> info@clinic.ru</p>
+                    <p><strong>Режим работы:</strong> Пн-Пт: 8:00-20:00, Сб-Вс: 9:00-18:00</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Наше местоположение</h3>
+                </div>
+                <div class="card-body">
+                    <div class="ratio ratio-16x9">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2245.373789134731!2d37.61887931593095!3d55.75370398055315!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46b54a5a738fa419%3A0x7c347d506f52311!2z0JrRgNCw0YHQvdCw0Y8g0J_Qu9C-0YnQsNC00Yw!5e0!3m2!1sru!2sru!4v1658765432107!5m2!1sru!2sru" 
+                                style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

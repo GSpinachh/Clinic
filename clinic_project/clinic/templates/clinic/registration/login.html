@@ -1,0 +1,115 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center font-weight-light my-4">Вход в систему</h3>
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        Неверное имя пользователя или пароль. Пожалуйста, попробуйте снова.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    {% if next %}
+                        {% if user.is_authenticated %}
+                        <div class="alert alert-warning" role="alert">
+                            У вашей учетной записи нет доступа к этой странице.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info" role="alert">
+                            Пожалуйста, войдите, чтобы увидеть эту страницу.
+                        </div>
+                        {% endif %}
+                    {% endif %}
+
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        
+                        <div class="form-floating mb-3">
+                            <input type="text" name="username" class="form-control" id="id_username" 
+                                   placeholder="Имя пользователя" required autofocus>
+                            <label for="id_username">Имя пользователя</label>
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            <input type="password" name="password" class="form-control" id="id_password" 
+                                   placeholder="Пароль" required>
+                            <label for="id_password">Пароль</label>
+                        </div>
+                        
+                        <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
+                            <a class="small" href="{% url 'password_reset' %}">Забыли пароль?</a>
+                            <button type="submit" class="btn btn-primary">Войти</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small">
+                        Нужен аккаунт? <a href="{% url 'register' %}">Зарегистрируйтесь!</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .form-floating label {
+        color: #6c757d;
+    }
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .btn-primary {
+        padding: 0.5rem 1.5rem;
+    }
+    .alert {
+        border-radius: 10px;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const usernameField = document.getElementById('id_username');
+    if (usernameField) {
+        usernameField.focus();
+    }
+    
+    const passwordField = document.getElementById('id_password');
+    if (passwordField) {
+        const togglePassword = document.createElement('span');
+        togglePassword.innerHTML = '<i class="bi bi-eye-fill"></i>';
+        togglePassword.style.position = 'absolute';
+        togglePassword.style.right = '10px';
+        togglePassword.style.top = '50%';
+        togglePassword.style.transform = 'translateY(-50%)';
+        togglePassword.style.cursor = 'pointer';
+        togglePassword.style.zIndex = '5';
+        
+        const passwordWrapper = passwordField.parentElement;
+        passwordWrapper.style.position = 'relative';
+        passwordWrapper.appendChild(togglePassword);
+        
+        togglePassword.addEventListener('click', function() {
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<i class="bi bi-eye-fill"></i>' : '<i class="bi bi-eye-slash-fill"></i>';
+        });
+    }
+});
+</script>
+{% endblock %} 

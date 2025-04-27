@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Медицинская справка о приеме</title>
+</head>
+<body>
+    <div class="header">
+        <div class="clinic-name">Частная медицинская клиника "Здоровье"</div>
+        <div>Лицензия № ЛО-77-01-012345 от 12.04.2018</div>
+        <div>Адрес: г. Ульяновкс, ул. Медицинская, д. 15</div>
+        <div class="date">Дата выдачи: {% now "d.m.Y" %}</div>
+    </div>
+
+    <div class="content">
+        <div class="section">
+            <div class="section-title">СПРАВКА</div>
+            <div>о проведении медицинского приема</div>
+        </div>
+
+        <div class="section">
+            <table>
+                <tr>
+                    <th width="30%">Номер справки</th>
+                    <td>{{ appointment.id }}/{% now "Y" %}</td>
+                </tr>
+                <tr>
+                    <th>Дата приема</th>
+                    <td>{{ appointment.date|date:"d.m.Y" }} в {{ appointment.time|time:"H:i" }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Данные пациента:</div>
+            <div class="patient-info">
+                <div>ФИО: {{ appointment.patient.user.get_full_name }}</div>
+                <div>Дата рождения: {{ appointment.patient.birth_date|date:"d.m.Y" }}</div>
+                <div>Адрес: {{ appointment.patient.address }}</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Данные врача:</div>
+            <div class="doctor-info">
+                <div>ФИО: {{ appointment.doctor.user.get_full_name }}</div>
+                <div>Специальность: {{ appointment.doctor.specialty }}</div>
+                <div>Кабинет: № {{ appointment.doctor.id|add:100 }}</div>
+                <div>Лицензия: № Д-{{ appointment.doctor.id|add:1000 }}</div>
+            </div>
+        </div>
+
+        {% if appointment.diagnosis %}
+        <div class="section">
+            <div class="section-title">Диагноз:</div>
+            <div class="diagnosis">{{ appointment.diagnosis }}</div>
+        </div>
+        {% endif %}
+
+        {% if appointment.prescription %}
+        <div class="section">
+            <div class="section-title">Назначение:</div>
+            <div class="prescription">{{ appointment.prescription }}</div>
+        </div>
+        {% endif %}
+
+        <div class="section">
+            <div class="section-title">Рекомендации:</div>
+            <ul>
+                <li>Повторный прием рекомендуется через 2 недели</li>
+                <li>При ухудшении состояния немедленно обратиться к врачу</li>
+                <li>Соблюдать назначенный режим лечения</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <div class="stamp">
+                М.П.<br>
+                Подпись врача
+            </div>
+
+            <div class="signature">
+                Врач: _____________________ / {{ appointment.doctor.user.get_full_name }} /
+                <div class="signature-line"></div>
+            </div>
+        </div>
+
+        <div class="barcode">*{{ appointment.id }}*{% now "Ymd" %}*</div>
+    </div>
+
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+            @top-center {
+                content: "Медицинская справка № {{ appointment.id }}";
+                font-size: 12pt;
+            }
+            @bottom-center {
+                content: "Страница " counter(page) " из " counter(pages);
+                font-size: 10pt;
+            }
+        }
+        body {
+            font-family: "Times New Roman", serif;
+            font-size: 12pt;
+            line-height: 1.5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20pt;
+        }
+        .header h1 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 5pt;
+        }
+        .header .clinic-name {
+            font-size: 16pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .header .date {
+            margin-top: 15pt;
+        }
+        .content {
+            margin-top: 30pt;
+        }
+        .section {
+            margin-bottom: 15pt;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 5pt;
+            text-decoration: underline;
+        }
+        .patient-info, .doctor-info {
+            margin-left: 20pt;
+        }
+        .diagnosis {
+            margin-top: 10pt;
+            font-style: italic;
+        }
+        .prescription {
+            margin-top: 10pt;
+        }
+        .footer {
+            margin-top: 40pt;
+            text-align: right;
+        }
+        .signature {
+            margin-top: 30pt;
+        }
+        .signature-line {
+            width: 200pt;
+            border-top: 1px solid black;
+            margin-top: 40pt;
+            display: inline-block;
+        }
+        .stamp {
+            float: right;
+            margin-top: 20pt;
+            text-align: center;
+            border: 1px solid black;
+            padding: 5pt;
+            width: 120pt;
+        }
+        .barcode {
+            font-family: "Libre Barcode 128", cursive;
+            font-size: 24pt;
+            margin-top: 10pt;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10pt;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 5pt;
+            text-align: left;
+        }
+    </style>
+    
+</body>
+</html>

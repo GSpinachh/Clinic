@@ -1,0 +1,291 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+
+{% block title %}Мой профиль{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-lg mt-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">Мой профиль</h3>
+                        <a href="{% url 'password_change' %}" class="btn btn-sm btn-light">
+                            <i class="bi bi-key"></i> Сменить пароль
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="profileForm">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-3 text-center">
+                                <div class="profile-picture-container mb-3">
+                                    <img src="{% if user.patient.photo %}{{ user.patient.photo.url }}{% else %}{% static 'clinic/images/default-avatar.png' %}{% endif %}" 
+                                         class="rounded-circle img-thumbnail" 
+                                         id="profilePicture" 
+                                         width="150" 
+                                         height="150"
+                                         alt="Фото профиля">
+                                    <div class="mt-2">
+                                        <label for="id_photo" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-camera"></i> Изменить
+                                        </label>
+                                        {{ form.photo }}
+                                        <input type="hidden" name="photo-clear" id="photo-clear_id">
+                                        {% if user.patient.photo %}
+                                        <button type="button" class="btn btn-sm btn-outline-danger" id="removePhotoBtn">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    {% if form.photo.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.photo.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="text" name="first_name" class="form-control" id="id_first_name" 
+                                                   value="{{ form.first_name.value }}" required>
+                                            <label for="id_first_name">Имя</label>
+                                            {% if form.first_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.first_name.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" name="last_name" class="form-control" id="id_last_name" 
+                                                   value="{{ form.last_name.value }}" required>
+                                            <label for="id_last_name">Фамилия</label>
+                                            {% if form.last_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.last_name.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input type="email" name="email" class="form-control" id="id_email" 
+                                           value="{{ form.email.value }}" required>
+                                    <label for="id_email">Email</label>
+                                    {% if form.email.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.email.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input type="tel" name="phone" class="form-control" id="id_phone" 
+                                           value="{{ form.phone.value }}" required>
+                                    <label for="id_phone">Телефон</label>
+                                    {% if form.phone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.phone.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="date" name="birth_date" class="form-control" id="id_birth_date" 
+                                           value="{{ form.birth_date.value|date:'Y-m-d' }}" required>
+                                    <label for="id_birth_date">Дата рождения</label>
+                                    {% if form.birth_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.birth_date.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-floating">
+                                    <input type="text" name="address" class="form-control" id="id_address" 
+                                           value="{{ form.address.value }}" required>
+                                    <label for="id_address">Адрес</label>
+                                    {% if form.address.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.address.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            <textarea name="medical_history" class="form-control" id="id_medical_history" 
+                                      style="height: 100px">{% if form.medical_history.value %}{{ form.medical_history.value }}{% endif %}</textarea>
+                            <label for="id_medical_history">Медицинская история (аллергии, хронические заболевания)</label>
+                            {% if form.medical_history.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.medical_history.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'home' %}" class="btn btn-outline-secondary me-md-2">
+                                Отмена
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card shadow-lg border-0 rounded-lg mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Мои медицинские документы</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" action="{% url 'upload_document' %}">
+                        {% csrf_token %}
+                        <div class="input-group mb-3">
+                            <input type="file" name="document" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+                            <button class="btn btn-outline-primary" type="submit">
+                                <i class="bi bi-upload"></i> Загрузить
+                            </button>
+                        </div>
+                        <small class="text-muted">Допустимые форматы: PDF, JPG, PNG (макс. 5MB)</small>
+                    </form>
+                    
+                    <div class="table-responsive mt-4">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Дата загрузки</th>
+                                    <th>Размер</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in documents %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ doc.file.url }}" target="_blank">
+                                            <i class="bi bi-file-earmark-text"></i> {{ doc.filename }}
+                                        </a>
+                                    </td>
+                                    <td>{{ doc.uploaded_at|date:"d.m.Y" }}</td>
+                                    <td>{{ doc.file.size|filesizeformat }}</td>
+                                    <td>
+                                        <a href="{{ doc.file.url }}" download class="btn btn-sm btn-outline-success me-1">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'delete_document' doc.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Нет загруженных документов</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-picture-container {
+        position: relative;
+    }
+    #id_photo {
+        display: none;
+    }
+    .card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .form-floating label {
+        color: #6c757d;
+    }
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .btn-primary {
+        padding: 0.75rem 1.5rem;
+    }
+    #id_medical_history {
+        min-height: 100px;
+    }
+    .table th {
+        background-color: #f8f9fa;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const photoInput = document.getElementById('id_photo');
+    const profilePicture = document.getElementById('profilePicture');
+    const removePhotoBtn = document.getElementById('removePhotoBtn');
+    const photoClearInput = document.getElementById('photo-clear_id');
+    
+    if (photoInput) {
+        photoInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    profilePicture.src = event.target.result;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+                photoClearInput.value = '';
+            }
+        });
+    }
+    
+    // Удаление 
+    if (removePhotoBtn) {
+        removePhotoBtn.addEventListener('click', function() {
+            profilePicture.src = "{% static 'clinic/images/default-avatar.png' %}";
+            photoClearInput.value = '1';
+            photoInput.value = '';
+        });
+    }
+    
+    {% comment %} const phoneInput = document.getElementById('id_phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+            e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + ') ' + x[3] + (x[4] ? '-' + x[4] : '') + (x[5] ? '-' + x[5] : '');
+        });
+    } {% endcomment %}
+    
+    const deleteForms = document.querySelectorAll('form[action*="delete_document"]');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Вы уверены, что хотите удалить этот документ?')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

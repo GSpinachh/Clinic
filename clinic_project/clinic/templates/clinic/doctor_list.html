@@ -1,0 +1,157 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+
+{% block title %}Наши врачи{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-center">Наши врачи</h1>
+            
+            <!-- Фильтры начало -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="specialtyFilter" class="form-label">Специальность</label>
+                            <select class="form-select" id="specialtyFilter" name="specialty">
+                                <option value="">Все специальности</option>
+                                {% for specialty in specialties %}
+                                <option value="{{ specialty.id }}" {% if specialty.id == selected_specialty %}selected{% endif %}>
+                                    {{ specialty.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="experienceFilter" class="form-label">Опыт работы</label>
+                            <select class="form-select" id="experienceFilter" name="experience">
+                                <option value="">Любой опыт</option>
+                                <option value="5" {% if request.GET.experience == "5" %}selected{% endif %}>5+ лет</option>
+                                <option value="10" {% if request.GET.experience == "10" %}selected{% endif %}>10+ лет</option>
+                                <option value="15" {% if request.GET.experience == "15" %}selected{% endif %}>15+ лет</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">Применить</button>
+                            <a href="{% url 'doctor_list' %}" class="btn btn-outline-secondary">Сбросить</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Сортировка начало -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="text-muted">
+                    Найдено врачей: {{ doctors.count }}
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if request.GET.sort == "rating" %}По рейтингу
+                        {% elif request.GET.sort == "experience" %}По опыту
+                        {% else %}По алфавиту
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                        <li><a class="dropdown-item" href="?{% if request.GET.specialty %}specialty={{ request.GET.specialty }}&{% endif %}sort=name">По алфавиту</a></li>
+                        <li><a class="dropdown-item" href="?{% if request.GET.specialty %}specialty={{ request.GET.specialty }}&{% endif %}sort=rating">По рейтингу</a></li>
+                        <li><a class="dropdown-item" href="?{% if request.GET.specialty %}specialty={{ request.GET.specialty }}&{% endif %}sort=experience">По опыту</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список -->
+    <div class="row">
+        {% if doctors %}
+            {% for doctor in doctors %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-img-top position-relative">
+                        <img src="{{ doctor.photo.url }}" class="card-img-top doctor-photo" alt="{{ doctor.user.get_full_name }}">
+                        {% if doctor.average_rating %}
+                        <div class="position-absolute top-0 end-0 bg-primary text-white p-2 rounded-bl">
+                            ★ {{ doctor.average_rating|floatformat:1 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ doctor.user.get_full_name }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ doctor.specialty }}</h6>
+                        <p class="card-text">
+                            <small class="text-muted">Опыт: {{ doctor.experience }} лет</small><br>
+                            {{ doctor.bio|truncatewords:20 }}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ doctor.get_absolute_url }}" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'appointment_create' %}?doctor={{ doctor.id }}" class="btn btn-sm btn-primary">Записаться</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info" role="alert">
+                    Врачи по выбранным критериям не найдены. Попробуйте изменить параметры поиска.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!--  -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.specialty %}&specialty={{ request.GET.specialty }}{% endif %}{% if request.GET.experience %}&experience={{ request.GET.experience }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.specialty %}&specialty={{ request.GET.specialty }}{% endif %}{% if request.GET.experience %}&experience={{ request.GET.experience }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.specialty %}&specialty={{ request.GET.specialty }}{% endif %}{% if request.GET.experience %}&experience={{ request.GET.experience }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.specialty %}&specialty={{ request.GET.specialty }}{% endif %}{% if request.GET.experience %}&experience={{ request.GET.experience }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.specialty %}&specialty={{ request.GET.specialty }}{% endif %}{% if request.GET.experience %}&experience={{ request.GET.experience }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    .doctor-photo {
+        height: 250px;
+        object-fit: cover;
+        object-position: top;
+    }
+</style>
+{% endblock %}

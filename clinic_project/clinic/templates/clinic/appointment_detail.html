@@ -1,0 +1,196 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+
+{% block title %}Запись на прием #{{ appointment.id }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">Запись на прием #{{ appointment.id }}</h2>
+                        <span class="badge bg-{% if appointment.status == 'scheduled' %}info{% elif appointment.status == 'completed' %}success{% else %}danger{% endif %}">
+                            {{ appointment.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2">Информация о враче</h5>
+                            <div class="d-flex align-items-start mt-3">
+                                <img src="{{ appointment.doctor.photo.url }}" 
+                                     class="rounded-circle me-3" 
+                                     width="80" 
+                                     height="80" 
+                                     alt="{{ appointment.doctor.user.get_full_name }}">
+                                <div>
+                                    <h5>{{ appointment.doctor.user.get_full_name }}</h5>
+                                    <p class="text-muted mb-1">{{ appointment.doctor.specialty }}</p>
+                                    <p class="mb-1"><small>Опыт: {{ appointment.doctor.experience }} лет</small></p>
+                                    <a href="{{ appointment.doctor.get_absolute_url }}" class="btn btn-sm btn-outline-primary mt-2">
+                                        Профиль врача
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2">Детали приема</h5>
+                            <ul class="list-group list-group-flush mt-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Дата:</span>
+                                    <strong>{{ appointment.date|date:"d E Y" }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Время:</span>
+                                    <strong>{{ appointment.time|time:"H:i" }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Кабинет:</span>
+                                    <strong>№ {{ appointment.doctor.id|add:100 }}</strong>
+                                </li>
+                                {% if appointment.status == 'completed' %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Длительность:</span>
+                                    <strong>30 минут</strong>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    {% if appointment.notes %}
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">Ваши комментарии</h5>
+                        <div class="alert alert-light mt-3">
+                            {{ appointment.notes }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if appointment.status == 'completed' %}
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">Результаты приема</h5>
+                        <div class="row">
+                            {% if appointment.diagnosis %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Диагноз</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>{{ appointment.diagnosis }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if appointment.prescription %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Назначение</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>{{ appointment.prescription }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <div>
+                            {% if appointment.status == 'scheduled' %}
+                            <button class="btn btn-outline-danger me-2" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                Отменить запись
+                            </button>
+                            {% endif %}
+                            <a href="{% url 'appointment_list' %}" class="btn btn-outline-secondary">
+                                Назад к списку
+                            </a>
+                        </div>
+                        <div>
+                            {% if appointment.status == 'completed' %}
+                            <a href="{% url 'appointment_pdf' appointment.id %}" class="btn btn-primary me-2" target="_blank">
+                                <i class="bi bi-file-earmark-pdf"></i> Справка (PDF)
+                            </a>
+                            {% if not has_review %}
+                            <a href="{% url 'create_review' appointment.doctor.id %}?appointment={{ appointment.id }}" class="btn btn-success">
+                                Оставить отзыв
+                            </a>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if appointment.status == 'completed' and appointment.review %}
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Ваш отзыв</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rating-display me-3">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= appointment.review.rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">{{ appointment.review.created_at|date:"d.m.Y" }}</small>
+                    </div>
+                    <div class="alert alert-light">
+                        {{ appointment.review.comment }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">Отмена записи</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите отменить запись к <strong>{{ appointment.doctor.user.get_full_name }}</strong> 
+                на <strong>{{ appointment.date|date:"d E Y" }} в {{ appointment.time|time:"H:i" }}</strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Отмена записи менее чем за 24 часа до приема 
+                    может привести к ограничению возможности записи.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <form method="post" action="{% url 'appointment_cancel' appointment.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Подтвердить отмену</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rating-display {
+        color: #ffc107;
+        font-size: 1.5rem;
+        letter-spacing: 0.2rem;
+    }
+    .list-group-item {
+        padding: 0.75rem 0;
+        background-color: transparent;
+    }
+    .bi {
+        margin-right: 0.3rem;
+    }
+</style>
+{% endblock %}
